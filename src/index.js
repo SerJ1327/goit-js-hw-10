@@ -1,8 +1,8 @@
-import { fetchBreeds } from './cat-api.js';
+import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
 
-urlStart = 'https://api.thecatapi.com/v1/breeds';
-url = 'https://api.thecatapi.com/v1/images/';
-api_key =
+const urlStart = 'https://api.thecatapi.com/v1/breeds';
+const url = 'https://api.thecatapi.com/v1/images/search';
+const api_key =
   'live_56u4qZvUIrHjhxiTu1SE4yfg1ZrFNbVxDAI5Ukoi1SzrlcxkQYjymljiMumVZeEa';
 
 const catBreedsList = document.querySelector('.breed-select');
@@ -24,32 +24,34 @@ function addListMarkup(data) {
 }
 
 function renderHTMLList(data) {
-  return data.map(({ name, image }) => {
-    console.log(image.id);
-
-    return `<option value='${image.id}'> ${name}</option>`;
+  return data.map(({ id, name }) => {
+    return `<option value='${id}'> ${name}</option>`;
   });
 }
 
 catBreedsList.addEventListener('change', e => {
   loaderMessage.hidden = false;
 
-  const urlSecond = `${url}${e.target.value}`;
-  console.log(urlSecond);
-  fetchBreeds(urlSecond, api_key)
+  const breedId = e.target.value;
+
+  fetchCatByBreed(breedId, url, api_key)
     .then(data => {
-      renderHTMLItem(data);
+      addListItem(data);
     })
     .catch(error => (error.hidden = false));
 });
 
-function renderHTMLItem({ image, name, description, temperament }) {
-  const markupItem = `<img src="${image.url}" width=300px alt="cat ${name}">
-  <div class="infoAboutCat">
-      <h2 class ="second-header">${name}</h2>
+function addListItem(data) {
+  catInfo.innerHTML = renderHTMLItem(data);
+}
+function renderHTMLItem(data) {
+  return data.map(({ url, name, description, temperament }) => {
+    loaderMessage.hidden = true;
+    return `<img src="${url}" width=300px">
+    <div class="infoAboutCat">
+    <h2 class ="second-header">${name}</h2>
     <p>${description}</p>
-    <p>${temperament}</p>
-    <div>`;
-  catInfo.innerHTML = markupItem;
-  loaderMessage.hidden = true;
+ <p>${temperament}</p>
+  <div>`;
+  });
 }
