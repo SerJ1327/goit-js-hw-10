@@ -1,11 +1,11 @@
 import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
 
-const urlStart = 'https://api.thecatapi.com/v1/breeds';
-const url = 'https://api.thecatapi.com/v1/images/search';
-const api_key =
+const URL_START = 'https://api.thecatapi.com/v1/breeds';
+const URL = 'https://api.thecatapi.com/v1/images/search';
+const API_KEY =
   'live_56u4qZvUIrHjhxiTu1SE4yfg1ZrFNbVxDAI5Ukoi1SzrlcxkQYjymljiMumVZeEa';
 
-const catBreedsList = document.querySelector('.breed-select');
+const breedSelectRef = document.querySelector('.breed-select');
 const loaderMessage = document.querySelector('.loader');
 const errorMessage = document.querySelector('.error');
 const catInfo = document.querySelector('.cat-info');
@@ -13,45 +13,46 @@ const catInfo = document.querySelector('.cat-info');
 loaderMessage.hidden = true;
 errorMessage.hidden = true;
 
-fetchBreeds(urlStart, api_key)
+fetchBreeds(URL_START, API_KEY)
   .then(data => {
-    addListMarkup(data);
+    data = data.filter(img => img.image?.url != null);
+
+    for (let i = 0; i < data.length; i += 1) {
+      const breed = data[i];
+
+      let option = document.createElement('option');
+      option.value = breed.id;
+      option.innerHTML = breed.name;
+      breedSelectRef.append(option);
+    }
   })
-  .catch(error => (error.hidden = false));
-
-function addListMarkup(data) {
-  catBreedsList.innerHTML = renderHTMLList(data);
-}
-
-function renderHTMLList(data) {
-  return data.map(({ id, name }) => {
-    return `<option value='${id}'> ${name}</option>`;
+  .catch(error => {
+    console.error(error);
+    errorMessage.hidden = false;
   });
-}
 
-catBreedsList.addEventListener('change', e => {
+breedSelectRef.addEventListener('change', e => {
   loaderMessage.hidden = false;
-
+  catInfo.innerHTML = '';
   const breedId = e.target.value;
 
-  fetchCatByBreed(breedId, url, api_key)
-    .then(data => {
-      addListItem(data);
-    })
-    .catch(error => (error.hidden = false));
-});
+  fetchCatByBreed(breedId, URL, API_KEY)
+    .then(dataCat => {
+      const cat = dataCat[0].breeds[0];
 
-function addListItem(data) {
-  catInfo.innerHTML = renderHTMLItem(data);
-}
-function renderHTMLItem(data) {
-  return data.map(({ url, name, description, temperament }) => {
-    loaderMessage.hidden = true;
-    return `<img src="${url}" width=300px">
-    <div class="infoAboutCat">
-    <h2 class ="second-header">${name}</h2>
-    <p>${description}</p>
- <p>${temperament}</p>
-  <div>`;
-  });
-}
+      const aboutCatMarkup = `<div class="cat-img-thumb"><img class="cat-info-img" src="${dataCat[0].url}" alt="${cat.alt_names}" /></div>
+       <div class="cat-info-thumb">
+        <h2 class="cat-info-breed">${cat.name}</h2>
+        <p class="cat-info-description">${cat.description}</p>
+        <p class="cat-info-temperament"><b>Temperament:</b> ${cat.temperament}</p>
+      </div>`;
+
+      catInfo.innerHTML = aboutCatMarkup;
+      loaderMessage.hidden = true;
+    })
+    .catch(error => {
+      console.error(error);
+      loaderMessage.hidden = true;
+      errorMessage.hidden = false;
+    });
+});

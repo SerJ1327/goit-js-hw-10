@@ -1,9 +1,5 @@
-function fetchBreeds(url, api_key) {
-  return fetch(url, {
-    headers: {
-      'x-api-key': api_key,
-    },
-  }).then(response => {
+function fetchBreeds(URL_START, API_KEY) {
+  return fetch(`${URL_START}?api_key=${API_KEY}`).then(response => {
     if (!response.ok) {
       throw new Error(response.status);
     }
@@ -11,17 +7,15 @@ function fetchBreeds(url, api_key) {
   });
 }
 
-function fetchCatByBreed(breedId, url, api_key) {
-  return fetch(url + `?bread_ids=${breedId}`, {
-    headers: {
-      'x-api-key': api_key,
-    },
-  }).then(response => {
-    if (!response.ok) {
-      throw new Error(response.status);
+function fetchCatByBreed(breedId, URL, API_KEY) {
+  return fetch(`${URL}?breed_ids=${breedId}&api_key=${API_KEY}`).then(
+    response => {
+      if (!response.ok) {
+        throw new Error(response.status);
+      }
+      return response.json();
     }
-    return response.json();
-  });
+  );
 }
 
 export { fetchBreeds, fetchCatByBreed };
